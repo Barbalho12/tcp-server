@@ -18,6 +18,11 @@
 			<artifactId>h2</artifactId>
 			<version>1.4.200</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-core</artifactId>
+			<version>3.0.0-M2</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
