@@ -10,8 +10,6 @@ import org.apache.mina.api.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//import com.barbalho.rocha.TCPClient.Message;
-
 public class ServerHandler implements IoHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ServerHandler.class);
@@ -30,19 +28,6 @@ public class ServerHandler implements IoHandler {
 	public void sessionIdle(IoSession session, IdleStatus status) {
 
 	}
-
-	public static final int INIT = 0;
-	public static final int BYTES = 1;
-	public static final int FRAME = 2;
-	public static final int START_DATA = 3;
-
-	public static final byte INIT_VALUE = 0x0A;
-	public static final byte END_VALUE = 0x0D;
-
-	public static final byte TEXT_FRAME = (byte) 0xA1;
-	public static final byte USER_FRAME = (byte) 0xA2;
-	public static final byte TIME_FRAME = (byte) 0xA3;
-	public static final byte ACK_FRAME = (byte) 0xA0;
 
 	@Override
 	public void messageReceived(IoSession session, Object message) {
@@ -64,9 +49,13 @@ public class ServerHandler implements IoHandler {
 				System.out.println("INIT: " + String.format("0x%02X", init));
 				System.out.println("BYTES: " + String.format("0x%02X", bytes) + " = " + ((int) bytes));
 				System.out.println("FRAME: " + String.format("0x%02X", frame));
-				System.out.println("DATA: " + new String(messageBytes, StandardCharsets.UTF_8));
+				System.out.println("DATA: " + new String(messageBytes, StandardCharsets.ISO_8859_1));
 				System.out.println("CRC: " + String.format("0x%02X", crc));
 				System.out.println("END: " + String.format("0x%02X", end));
+
+				ByteBuffer encode = ByteBuffer.wrap(Protocol.ACK);
+
+				session.write(encode);
 
 			} catch (Exception e) {
 				e.printStackTrace();
