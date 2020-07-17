@@ -2,6 +2,15 @@ package com.barbalho.rocha;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import javax.xml.bind.annotation.XmlElement.DEFAULT;
 
@@ -31,21 +40,78 @@ public class ServerHandler implements IoHandler {
 
 	}
 
-	public void saveData(byte frame, byte[] data){
+	public byte [] getDateTimeByFuse(String fuse){
+
+		byte [] bytes = new byte[6];
+
+		Date date = new Date();
+		LocalDateTime localDate = date.toInstant().atZone(ZoneId.of(fuse)).toLocalDateTime();
+		
+		bytes[0]  = (byte) localDate.getYear();
+		bytes[1]  = (byte) localDate.getMonthValue();
+		bytes[2]  = (byte) localDate.getDayOfMonth();
+		bytes[3]  = (byte) localDate.getHour();
+		bytes[4]  = (byte) localDate.getMinute();
+		bytes[5]  = (byte) localDate.getSecond();
+
+		// int hour   = localDate.get
+
+		// Calendar currentDate = Calendar.getInstance(TimeZone.getTimeZone(fuse));
+		// int year = currentDate.get(Calendar.YEAR);
+		// int month = currentDate.get(Calendar.MONTH);
+		// int day = currentDate.get(Calendar.DAY_OF_MONTH);
+
+		// int month = currentDate.get(Calendar.MONTH);
+		// int day = currentDate.get(Calendar.DAY_OF_MONTH);
+
+		return bytes;
+	}
+
+	public static byte[] createMessage(byte[] textMessage, byte frame) {
+
+		byte[] byteMessage = new byte[textMessage.length + 5];
+
+		byteMessage[Protocol.INIT] = Protocol.INIT_VALUE;
+		byteMessage[Protocol.BYTES] = (byte) byteMessage.length;
+		byteMessage[Protocol.FRAME] = frame;
+
+		int index = Protocol.START_DATA;
+
+		for (int i = 0; i < textMessage.length; i++) {
+			byteMessage[index++] = (byte) textMessage[i];
+		}
+
+		byte[] subMessage = Arrays.copyOfRange(byteMessage, 3, index);
+
+		byteMessage[index++] = CRC8.calc(subMessage, subMessage.length);
+		byteMessage[index++] = Protocol.END_VALUE;
+
+		return byteMessage;
+	}
+
+	public byte [] getDateTimeFrame(String fuse){
+		byte [] dateTime = getDateTimeByFuse(fuse);
+		byte [] bytes = createMessage(dateTime, Protocol.TIME_FRAME);
+		return bytes;
+	}
+
+	public byte [] saveData(byte frame, byte[] data){
 
 		switch(frame){
 			case Protocol.TEXT_FRAME:
 				System.out.println("DATA: " + new String(data, StandardCharsets.ISO_8859_1));
-				break;
+				return Protocol.ACK;
 			case Protocol.USER_FRAME:
 				User user = new User(data);
 				System.out.println("DATA: " + user.toString());
-				break;
+				return Protocol.ACK;
 			case Protocol.TIME_FRAME:
-				System.out.println("DATA: TIME");
-				break;
+				String fuse = new String(data, StandardCharsets.ISO_8859_1);
+				System.out.println("DATA: " + fuse);
+				return getDateTimeFrame(fuse);
 			default:
 				System.err.println("FRAME INVÁLIDO");
+				return null;
 		}	
 
 	}
@@ -73,14 +139,16 @@ public class ServerHandler implements IoHandler {
 				
 				
 				// System.out.println("DATA: " + new String(messageBytes, StandardCharsets.ISO_8859_1));
-				saveData(frame, messageBytes);
+				byte [] response = saveData(frame, messageBytes);
 				
 				System.out.println("CRC: " + String.format("0x%02X", crc));
 				System.out.println("END: " + String.format("0x%02X", end));
 
-				ByteBuffer encode = ByteBuffer.wrap(Protocol.ACK);
-
-				session.write(encode);
+				if(response != null){
+					ByteBuffer encode = ByteBuffer.wrap(response);
+					session.write(encode);
+				}
+				
 
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -18,7 +18,7 @@ public class Server {
 	public static void run() {
 		LOG.info("start server...");
 		final NioTcpServer acceptor = new NioTcpServer();
-		acceptor.setFilters(new LoggingFilter("LoggingFilter1"));
+		acceptor.setFilters(new LoggingFilter("Server Filter"));
 		acceptor.setIoHandler(new ServerHandler());
 
 		try {
