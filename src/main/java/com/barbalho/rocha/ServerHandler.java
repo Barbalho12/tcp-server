@@ -1,16 +1,16 @@
 package com.barbalho.rocha;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.mina.api.IdleStatus;
 import org.apache.mina.api.IoHandler;
 import org.apache.mina.api.IoService;
 import org.apache.mina.api.IoSession;
-import org.apache.mina.codec.IoBuffer;
-import org.apache.mina.codec.delimited.serialization.JavaNativeMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+//import com.barbalho.rocha.TCPClient.Message;
 
 public class ServerHandler implements IoHandler {
 
@@ -31,16 +31,43 @@ public class ServerHandler implements IoHandler {
 
 	}
 
+	public static final int INIT = 0;
+	public static final int BYTES = 1;
+	public static final int FRAME = 2;
+	public static final int START_DATA = 3;
+
+	public static final byte INIT_VALUE = 0x0A;
+	public static final byte END_VALUE = 0x0D;
+
+	public static final byte TEXT_FRAME = (byte) 0xA1;
+	public static final byte USER_FRAME = (byte) 0xA2;
+	public static final byte TIME_FRAME = (byte) 0xA3;
+	public static final byte ACK_FRAME = (byte) 0xA0;
+
 	@Override
-	@SuppressWarnings("rawtypes")
 	public void messageReceived(IoSession session, Object message) {
 		if (message instanceof ByteBuffer) {
 			try {
-				JavaNativeMessageDecoder<HashMap> decoder = new JavaNativeMessageDecoder<HashMap>();
-				IoBuffer ioBuff = IoBuffer.wrap((ByteBuffer) message);
-				HashMap map = decoder.decode(ioBuff);
-				LOG.info("server decode value => " + map);
-				System.out.println("server decode => " + map);
+
+				ByteBuffer b = (ByteBuffer) message;
+
+				byte init = b.get();
+				int bytes = b.get();
+				byte frame = b.get();
+
+				byte[] messageBytes = new byte[bytes - 5];
+				b.get(messageBytes);
+
+				byte crc = b.get();
+				byte end = b.get();
+
+				System.out.println("INIT: " + String.format("0x%02X", init));
+				System.out.println("BYTES: " + String.format("0x%02X", bytes) + " = " + ((int) bytes));
+				System.out.println("FRAME: " + String.format("0x%02X", frame));
+				System.out.println("DATA: " + new String(messageBytes, StandardCharsets.UTF_8));
+				System.out.println("CRC: " + String.format("0x%02X", crc));
+				System.out.println("END: " + String.format("0x%02X", end));
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
