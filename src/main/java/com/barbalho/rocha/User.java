@@ -1,5 +1,7 @@
 package com.barbalho.rocha;
 
+import java.util.Arrays;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -41,6 +43,27 @@ public class User {
 		this.height = height;
 		this.nameSize = nameSize;
 		this.name = name;
+	}
+
+	public User(byte [] bytes) {
+		this.age = bytes[0];
+		this.weight = bytes[1];
+		this.height = bytes[2];
+		this.nameSize = bytes[3];
+		this.name = new String(Arrays.copyOfRange(bytes, 4, this.nameSize + 4));
+	}
+
+	public byte [] getBytes(){
+		byte [] bytes = new byte[nameSize + 4];
+		bytes[0] = (byte) age;
+		bytes[1] = (byte) weight;
+		bytes[2] = (byte) height;
+		bytes[3] = (byte) nameSize;
+
+		for (int i = 0, bi = 4; i < nameSize; i++, bi++) {
+			bytes[bi] = (byte) name.charAt(i);
+		}
+		return bytes;
 	}
 
 	public int getId() {

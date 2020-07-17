@@ -3,6 +3,8 @@ package com.barbalho.rocha;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import javax.xml.bind.annotation.XmlElement.DEFAULT;
+
 import org.apache.mina.api.IdleStatus;
 import org.apache.mina.api.IoHandler;
 import org.apache.mina.api.IoService;
@@ -29,6 +31,25 @@ public class ServerHandler implements IoHandler {
 
 	}
 
+	public void saveData(byte frame, byte[] data){
+
+		switch(frame){
+			case Protocol.TEXT_FRAME:
+				System.out.println("DATA: " + new String(data, StandardCharsets.ISO_8859_1));
+				break;
+			case Protocol.USER_FRAME:
+				User user = new User(data);
+				System.out.println("DATA: " + user.toString());
+				break;
+			case Protocol.TIME_FRAME:
+				System.out.println("DATA: TIME");
+				break;
+			default:
+				System.err.println("FRAME INVÁLIDO");
+		}	
+
+	}
+
 	@Override
 	public void messageReceived(IoSession session, Object message) {
 		if (message instanceof ByteBuffer) {
@@ -49,7 +70,11 @@ public class ServerHandler implements IoHandler {
 				System.out.println("INIT: " + String.format("0x%02X", init));
 				System.out.println("BYTES: " + String.format("0x%02X", bytes) + " = " + ((int) bytes));
 				System.out.println("FRAME: " + String.format("0x%02X", frame));
-				System.out.println("DATA: " + new String(messageBytes, StandardCharsets.ISO_8859_1));
+				
+				
+				// System.out.println("DATA: " + new String(messageBytes, StandardCharsets.ISO_8859_1));
+				saveData(frame, messageBytes);
+				
 				System.out.println("CRC: " + String.format("0x%02X", crc));
 				System.out.println("END: " + String.format("0x%02X", end));
 
@@ -66,7 +91,7 @@ public class ServerHandler implements IoHandler {
 	@Override
 	public void messageSent(IoSession session, Object message) {
 		LOG.info("send message:" + message.toString());
-		System.out.println("server send message:" + message.toString());
+		// System.out.println("server send message:" + message.toString());
 	}
 
 	@Override
