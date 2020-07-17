@@ -20,9 +20,7 @@ public class Server {
 		final NioTcpServer acceptor = new NioTcpServer();
 		acceptor.setFilters(new LoggingFilter("Server Filter"));
 		acceptor.setIoHandler(new ServerHandler());
-
 		try {
-
 			final SocketAddress address = new InetSocketAddress(9999);
 			acceptor.bind(address);
 			new BufferedReader(new InputStreamReader(System.in)).readLine();
@@ -32,8 +30,10 @@ public class Server {
 		}
 	}
 
+
 	public static void main(String[] args) {
 		run();
+		
 		/*
 		User user1 = new User(25, 61, 174, 6, "Felipe");
 		User user2 = new User(23, 80, 178, 4, "Luis");

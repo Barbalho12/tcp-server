@@ -2,22 +2,18 @@ package com.barbalho.rocha;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
-
-import javax.xml.bind.annotation.XmlElement.DEFAULT;
+import java.util.List;
 
 import org.apache.mina.api.IdleStatus;
 import org.apache.mina.api.IoHandler;
 import org.apache.mina.api.IoService;
 import org.apache.mina.api.IoSession;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,154 +22,177 @@ public class ServerHandler implements IoHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(ServerHandler.class);
 
 	@Override
-	public void sessionOpened(IoSession session) {
+	public void sessionOpened(final IoSession session) {
 		LOG.info("server session opened {" + session + "}");
 	}
 
 	@Override
-	public void sessionClosed(IoSession session) {
+	public void sessionClosed(final IoSession session) {
 		LOG.info("IP:" + session.getRemoteAddress().toString() + " close");
 	}
 
 	@Override
-	public void sessionIdle(IoSession session, IdleStatus status) {
+	public void sessionIdle(final IoSession session, final IdleStatus status) {
 
 	}
 
-	public byte [] getDateTimeByFuse(String fuse){
-
-		byte [] bytes = new byte[6];
-
-		Date date = new Date();
-		LocalDateTime localDate = date.toInstant().atZone(ZoneId.of(fuse)).toLocalDateTime();
-		
+	public byte [] getDateTimeByFuse(final String fuse){
+		final byte [] bytes = new byte[6];
+		final Date date = new Date();
+		final LocalDateTime localDate = date.toInstant().atZone(ZoneId.of(fuse)).toLocalDateTime();
 		bytes[0]  = (byte) localDate.getYear();
 		bytes[1]  = (byte) localDate.getMonthValue();
 		bytes[2]  = (byte) localDate.getDayOfMonth();
 		bytes[3]  = (byte) localDate.getHour();
 		bytes[4]  = (byte) localDate.getMinute();
 		bytes[5]  = (byte) localDate.getSecond();
-
-		// int hour   = localDate.get
-
-		// Calendar currentDate = Calendar.getInstance(TimeZone.getTimeZone(fuse));
-		// int year = currentDate.get(Calendar.YEAR);
-		// int month = currentDate.get(Calendar.MONTH);
-		// int day = currentDate.get(Calendar.DAY_OF_MONTH);
-
-		// int month = currentDate.get(Calendar.MONTH);
-		// int day = currentDate.get(Calendar.DAY_OF_MONTH);
-
 		return bytes;
 	}
 
-	public static byte[] createMessage(byte[] textMessage, byte frame) {
-
-		byte[] byteMessage = new byte[textMessage.length + 5];
-
+	public static byte[] createMessage(final byte[] textMessage, final byte frame) {
+		final byte[] byteMessage = new byte[textMessage.length + 5];
 		byteMessage[Protocol.INIT] = Protocol.INIT_VALUE;
 		byteMessage[Protocol.BYTES] = (byte) byteMessage.length;
 		byteMessage[Protocol.FRAME] = frame;
 
 		int index = Protocol.START_DATA;
-
 		for (int i = 0; i < textMessage.length; i++) {
 			byteMessage[index++] = (byte) textMessage[i];
 		}
 
-		byte[] subMessage = Arrays.copyOfRange(byteMessage, 3, index);
+		final byte[] subMessage = Arrays.copyOfRange(byteMessage, 3, index);
 
 		byteMessage[index++] = CRC8.calc(subMessage, subMessage.length);
 		byteMessage[index++] = Protocol.END_VALUE;
-
 		return byteMessage;
 	}
 
-	public byte [] getDateTimeFrame(String fuse){
-		byte [] dateTime = getDateTimeByFuse(fuse);
-		byte [] bytes = createMessage(dateTime, Protocol.TIME_FRAME);
+	public byte [] getDateTimeFrame(final String fuse){
+		final byte [] dateTime = getDateTimeByFuse(fuse);
+		final byte [] bytes = createMessage(dateTime, Protocol.TIME_FRAME);
 		return bytes;
 	}
 
-	public byte [] saveData(byte frame, byte[] data){
+	public void saveUser(final User object){
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			session.save(object);
+			transaction.commit();
+		} catch (final Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+	}
 
+	public void saveTextMessage(final TextMessage object){
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			session.save(object);
+			transaction.commit();
+		} catch (final Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			e.printStackTrace();
+		}
+	}
+
+	public byte [] saveData(final byte frame, final byte[] data){
 		switch(frame){
 			case Protocol.TEXT_FRAME:
-				System.out.println("DATA: " + new String(data, StandardCharsets.ISO_8859_1));
+				String text = new String(data);
+				final TextMessage textMessage = new TextMessage(text);
+				System.out.println("DATA: " + textMessage.toString());
+				saveTextMessage(textMessage);
 				return Protocol.ACK;
 			case Protocol.USER_FRAME:
 				User user = new User(data);
 				System.out.println("DATA: " + user.toString());
+				saveUser(user);
 				return Protocol.ACK;
 			case Protocol.TIME_FRAME:
-				String fuse = new String(data, StandardCharsets.ISO_8859_1);
+				final String fuse = new String(data);
 				System.out.println("DATA: " + fuse);
 				return getDateTimeFrame(fuse);
 			default:
 				System.err.println("FRAME INVÁLIDO");
 				return null;
 		}	
+	}
 
+	public void showdatabase(){
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			List<User> users = session.createQuery("from User", User.class).list();
+			users.forEach(s -> System.out.println(s.toString()));
+
+			List<TextMessage> textMessages = session.createQuery("from TextMessage", TextMessage.class).list();
+			textMessages.forEach(s -> System.out.println(s));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void messageReceived(IoSession session, Object message) {
+	public void messageReceived(final IoSession session, final Object message) {
 		if (message instanceof ByteBuffer) {
 			try {
+				final ByteBuffer b = (ByteBuffer) message;
 
-				ByteBuffer b = (ByteBuffer) message;
+				final byte init = b.get();
+				final int bytes = b.get();
+				final byte frame = b.get();
 
-				byte init = b.get();
-				int bytes = b.get();
-				byte frame = b.get();
-
-				byte[] messageBytes = new byte[bytes - 5];
+				final byte[] messageBytes = new byte[bytes - 5];
 				b.get(messageBytes);
 
-				byte crc = b.get();
-				byte end = b.get();
+				final byte crc = b.get();
+				final byte end = b.get();
 
 				System.out.println("INIT: " + String.format("0x%02X", init));
 				System.out.println("BYTES: " + String.format("0x%02X", bytes) + " = " + ((int) bytes));
 				System.out.println("FRAME: " + String.format("0x%02X", frame));
 				
-				
-				// System.out.println("DATA: " + new String(messageBytes, StandardCharsets.ISO_8859_1));
-				byte [] response = saveData(frame, messageBytes);
+				final byte [] response = saveData(frame, messageBytes);
 				
 				System.out.println("CRC: " + String.format("0x%02X", crc));
 				System.out.println("END: " + String.format("0x%02X", end));
 
 				if(response != null){
-					ByteBuffer encode = ByteBuffer.wrap(response);
+					final ByteBuffer encode = ByteBuffer.wrap(response);
 					session.write(encode);
 				}
-				
-
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
+
+		System.out.println("-----DB-----");
+		showdatabase();
+		System.out.println("------------");
 	}
 
 	@Override
-	public void messageSent(IoSession session, Object message) {
+	public void messageSent(final IoSession session, final Object message) {
 		LOG.info("send message:" + message.toString());
-		// System.out.println("server send message:" + message.toString());
 	}
 
 	@Override
-	public void serviceActivated(IoService service) {
-
-	}
-
-	@Override
-	public void serviceInactivated(IoService service) {
+	public void serviceActivated(final IoService service) {
 
 	}
 
 	@Override
-	public void exceptionCaught(IoSession session, Exception cause) {
+	public void serviceInactivated(final IoService service) {
+
+	}
+
+	@Override
+	public void exceptionCaught(final IoSession session, final Exception cause) {
 
 	}
 
