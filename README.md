@@ -10,6 +10,10 @@ Especifique a `porta` e execute o comando:
 ./run.sh 9999
 ```
 
+### Log de mensagens
+
+As requisições de recebimento e envio de mensagens são logdadas em `SERVER_LOG.txt`
+
 
 ### Referências
 

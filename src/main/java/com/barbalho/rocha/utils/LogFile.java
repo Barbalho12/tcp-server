@@ -7,7 +7,7 @@ import java.util.Date;
 public class LogFile {
 
     private static final String OUTPUT_LOG = "SERVER_LOG.txt";
-    private static SimpleDateFormat format = new SimpleDateFormat("hh:mm:ss");
+    private static SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.SSS");
 
     synchronized public static void log(String row) {
 

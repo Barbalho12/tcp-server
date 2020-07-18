@@ -46,10 +46,10 @@ public class User {
 	}
 
 	public User(byte [] bytes) {
-		this.age = (int) bytes[0];
-		this.weight = (int) bytes[1];
-		this.height = (int) bytes[2];
-		this.nameSize = (int) bytes[3];
+		this.age = (int) (bytes[0] & 0xff);
+		this.weight = (int) (bytes[1] & 0xff);
+		this.height = (int) (bytes[2] & 0xff);
+		this.nameSize = (int) (bytes[3] & 0xff);
 		this.name = new String(Arrays.copyOfRange(bytes, 4, this.nameSize + 4));
 	}
 
