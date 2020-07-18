@@ -1,4 +1,4 @@
-package com.barbalho.rocha;
+package com.barbalho.rocha.dao;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;

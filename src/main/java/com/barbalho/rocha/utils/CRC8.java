@@ -1,4 +1,4 @@
-package com.barbalho.rocha;
+package com.barbalho.rocha.utils;
 
 /**
  *  libFLAC - Free Lossless Audio Codec library

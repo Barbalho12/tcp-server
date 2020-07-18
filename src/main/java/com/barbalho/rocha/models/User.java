@@ -1,4 +1,4 @@
-package com.barbalho.rocha;
+package com.barbalho.rocha.models;
 
 import java.util.Arrays;
 
