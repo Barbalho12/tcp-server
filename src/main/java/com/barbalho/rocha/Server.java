@@ -31,7 +31,7 @@ public class Server {
 
 	public static void main(String[] args) {
 		if (args.length > 0) {
-			PORT_SERVER = Integer.valueOf(args[1]);
+			PORT_SERVER = Integer.valueOf(args[0]);
 		}
 		run();
 	}

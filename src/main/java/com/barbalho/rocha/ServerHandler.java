@@ -11,6 +11,8 @@ import com.barbalho.rocha.exceptions.DaoException;
 import com.barbalho.rocha.exceptions.ProtocolException;
 import com.barbalho.rocha.models.TextMessage;
 import com.barbalho.rocha.models.User;
+import com.barbalho.rocha.models.FrameMessage;
+import com.barbalho.rocha.utils.LogFile;
 
 import org.apache.mina.api.IdleStatus;
 import org.apache.mina.api.IoHandler;
@@ -36,25 +38,28 @@ public class ServerHandler implements IoHandler {
 
 	}
 
-	public byte[] processDataFrame(final byte frame, final byte[] data) throws ProtocolException, DaoException {
-		switch (frame) {
+	public byte[] processDataFrame(FrameMessage frameMessage) throws ProtocolException, DaoException {
+		switch (frameMessage.frame) {
 
 			case Protocol.TEXT_FRAME:
-				final String text = new String(data);
+				final String text = new String(frameMessage.data);
 				final TextMessage textMessage = new TextMessage(text);
-				LOG.info("DATA: " + textMessage.toString());
+				LogFile.log("server receive TEXT FRAME: [ " + frameMessage.toString() + " ] = "+text.toString());
+				System.out.println("DATA: " + textMessage.toString());
 				TextMessageDao.save(textMessage);
 				return Protocol.ACK;
 
 			case Protocol.USER_FRAME:
-				final User user = new User(data);
-				LOG.info("DATA: " + user.toString());
+				final User user = new User(frameMessage.data);
+				LogFile.log("server receive USER FRAME: [ " + frameMessage.toString() + " ] = "+user.toString());
+				System.out.println("DATA: " + user.toString());
 				UserDao.save(user);
 				return Protocol.ACK;
 
 			case Protocol.TIME_FRAME:
-				final String fuse = new String(data);
-				LOG.info("DATA: " + fuse);
+				final String fuse = new String(frameMessage.data);
+				LogFile.log("server receive TIME FRAME: [ " + frameMessage.toString() + " ] = "+fuse.toString());
+				System.out.println("DATA: " + fuse);
 				return getDateTimeFrame(fuse);
 
 			default:
@@ -76,32 +81,21 @@ public class ServerHandler implements IoHandler {
 		}
 	}
 
-	
-
 	@Override
 	public void messageReceived(final IoSession session, final Object message) {
 		if (message instanceof ByteBuffer) {
 			try {
-				final ByteBuffer b = (ByteBuffer) message;
+				final ByteBuffer byteBuffer = (ByteBuffer) message;
+				FrameMessage frameMessage = new FrameMessage(byteBuffer);
 
-				Protocol.validateINIT(b.get());
-
-				final byte bytes = b.get();
-				final byte frame = b.get();
-
-				final byte[] messageBytes = new byte[((int) bytes) - 5];
-				b.get(messageBytes);
-
-				byte crc = b.get();
-
-				Protocol.validateCRC(bytes, frame, messageBytes, crc);
-				Protocol.validateEND(b.get());
-
-				final byte [] response = processDataFrame(frame, messageBytes);
+				frameMessage.validate();
 				
+				final byte [] response = processDataFrame(frameMessage);
 				final ByteBuffer encode = ByteBuffer.wrap(response);
-
 				session.write(encode);
+
+				FrameMessage frameMessageResponse = new FrameMessage(response);
+				LogFile.log("server send: [ " + frameMessageResponse.toString() + " ]");
 				
 			} catch (final Exception exception) {
 				LOG.error("Erro ao tentar processar mensagem do cliente", exception);
