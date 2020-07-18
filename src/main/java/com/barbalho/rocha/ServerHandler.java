@@ -25,12 +25,10 @@ public class ServerHandler implements IoHandler {
 
 	@Override
 	public void sessionOpened(final IoSession session) {
-		LOG.info("server session opened {" + session + "}");
 	}
 
 	@Override
 	public void sessionClosed(final IoSession session) {
-		LOG.info("IP:" + session.getRemoteAddress().toString() + " close");
 	}
 
 	@Override
@@ -114,7 +112,6 @@ public class ServerHandler implements IoHandler {
 
 	@Override
 	public void messageSent(final IoSession session, final Object message) {
-		LOG.info("send message:" + message.toString());
 	}
 
 	@Override

@@ -13,12 +13,14 @@ public class Server {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
+	public static int PORT_SERVER = 9999;
+
 	public static void run() {
 		LOG.info("start server...");
 		final NioTcpServer acceptor = new NioTcpServer();
 		acceptor.setIoHandler(new ServerHandler());
 		try {
-			final SocketAddress address = new InetSocketAddress(9999);
+			final SocketAddress address = new InetSocketAddress(PORT_SERVER);
 			acceptor.bind(address);
 			new BufferedReader(new InputStreamReader(System.in)).readLine();
 			acceptor.unbind();
@@ -28,6 +30,9 @@ public class Server {
 	}
 
 	public static void main(String[] args) {
+		if (args.length > 0) {
+			PORT_SERVER = Integer.valueOf(args[1]);
+		}
 		run();
 	}
 }

@@ -5,6 +5,7 @@
 	<groupId>com.barbalho.rocha</groupId>
 	<artifactId>tcp-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>tcp-server</name>
 	<description>Servidor TCP</description>
 	<dependencies>
@@ -38,6 +39,7 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+					
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
@@ -48,4 +50,5 @@
 			</plugin>
 		</plugins>
 	</build>
+	
 </project>
