@@ -43,3 +43,4 @@ release.properties
 pom.xml.releaseBackup
 pom.xml.tag
 .vscode/*
+SERVER_LOG.txt
