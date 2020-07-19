@@ -40,9 +40,10 @@ public class Protocol {
 			byteMessage[index++] = (byte) textMessage[i];
 		}
 
-		final byte[] subMessage = Arrays.copyOfRange(byteMessage, 3, index);
+		final byte[] subMessage = Arrays.copyOfRange(byteMessage, 1, index);
 
 		byteMessage[index++] = CRC8.calc(subMessage, subMessage.length);
+		
 		byteMessage[index++] = Protocol.END_VALUE;
 		return byteMessage;
 	}

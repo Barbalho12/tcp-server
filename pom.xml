@@ -29,6 +29,12 @@
 			<artifactId>slf4j-simple</artifactId>
 			<version>1.7.30</version>
 		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.4.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -39,7 +45,7 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-					
+
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
@@ -50,5 +56,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 </project>
