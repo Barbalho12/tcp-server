@@ -8,9 +8,15 @@ import com.barbalho.rocha.models.User;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+/**
+ * User data access layer
+ * 
+ * @author Felipe Barbalho
+ *
+ */
 public class UserDao {
 
-    public static void save(final User object) throws DaoException {
+	public static void save(final User object) throws DaoException {
 		Transaction transaction = null;
 		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
@@ -20,17 +26,17 @@ public class UserDao {
 			if (transaction != null) {
 				transaction.rollback();
 			}
-            throw new DaoException("Erro ao tentar salvar na base de dado", exception);
+			throw new DaoException("Error when trying to save to the database", exception);
 		}
-    }
-    
-    public static List<User> findAll() throws DaoException{
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+	}
+
+	public static List<User> findAll() throws DaoException {
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			List<User> users = session.createQuery("from User", User.class).list();
-            return users;
+			return users;
 		} catch (Exception exception) {
-			throw new DaoException("Erro ao colsultar base de dado", exception);
+			throw new DaoException("Error querying database", exception);
 		}
-    }
-    
+	}
+
 }

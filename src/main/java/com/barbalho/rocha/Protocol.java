@@ -6,9 +6,15 @@ import com.barbalho.rocha.exceptions.ProtocolException;
 import com.barbalho.rocha.utils.CRC8;
 import com.barbalho.rocha.utils.DateUtils;
 
+/**
+ * Business rules of protocol definition
+ * 
+ * @author Felipe Barbalho
+ *
+ */
 public class Protocol {
 
-    public static final int INIT = 0;
+	public static final int INIT = 0;
 	public static final int BYTES = 1;
 	public static final int FRAME = 2;
 	public static final int START_DATA = 3;
@@ -19,15 +25,16 @@ public class Protocol {
 	public static final byte TEXT_FRAME = (byte) 0xA1;
 	public static final byte USER_FRAME = (byte) 0xA2;
 	public static final byte TIME_FRAME = (byte) 0xA3;
-    public static final byte ACK_FRAME = (byte) 0xA0;
-    
-	public static final byte [] ACK = {INIT_VALUE, 0x05, ACK_FRAME, 0x28, END_VALUE};
-	
+	public static final byte ACK_FRAME = (byte) 0xA0;
+
+	public static final byte[] ACK = { INIT_VALUE, 0x05, ACK_FRAME, 0x28, END_VALUE };
+
 	/**
-	 * Cria frame de texto
-	 * @param textMessage Conteúdo do frame
-	 * @param frame tipo do frame
-	 * @return Frame completo para ser enviado
+	 * Create text frame
+	 * 
+	 * @param textMessage Frame content
+	 * @param frame       frame type
+	 * @return Full frame to be sent
 	 */
 	public static byte[] createMessage(final byte[] textMessage, final byte frame) {
 		final byte[] byteMessage = new byte[textMessage.length + 5];
@@ -43,18 +50,20 @@ public class Protocol {
 		final byte[] subMessage = Arrays.copyOfRange(byteMessage, 1, index);
 
 		byteMessage[index++] = CRC8.calc(subMessage, subMessage.length);
-		
+
 		byteMessage[index++] = Protocol.END_VALUE;
 		return byteMessage;
 	}
 
 	/**
-	 * Cria conteúdo do frame completo de reposta de horário atual a partir do fuso horário passado
-	 * @param fuse fuso horários padrão
-	 * @return Frame completo com datetime
+	 * Creates content of the complete current time response frame from the past
+	 * time zone
+	 * 
+	 * @param fuse standard time zone
+	 * @return Full frame with datetime
 	 */
-	public static byte [] getDateTimeFrame(final String fuse){
-		final byte [] dateTime = DateUtils.getDateTimeByFuse(fuse);
+	public static byte[] getDateTimeFrame(final String fuse) {
+		final byte[] dateTime = DateUtils.getDateTimeByFuse(fuse);
 		return createMessage(dateTime, Protocol.TIME_FRAME);
 	}
 
@@ -66,23 +75,21 @@ public class Protocol {
 		for (int i = 0; i < data.length; i++) {
 			array[index++] = data[i];
 		}
-		if( CRC8.calc(array, array.length) != crc ){
+		if (CRC8.calc(array, array.length) != crc) {
 			throw new ProtocolException("CRC inválido");
 		}
 	}
 
 	public static void validateINIT(byte init) throws ProtocolException {
-		if( init != Protocol.INIT_VALUE ){
+		if (init != Protocol.INIT_VALUE) {
 			throw new ProtocolException("INIT inválido");
 		}
 	}
 
 	public static void validateEND(byte end) throws ProtocolException {
-		if( end != Protocol.END_VALUE ){
+		if (end != Protocol.END_VALUE) {
 			throw new ProtocolException("END inválido");
 		}
 	}
 
-	
-    
 }

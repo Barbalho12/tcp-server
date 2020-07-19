@@ -9,8 +9,15 @@ import org.apache.mina.transport.nio.NioTcpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Main Class for reading arguments of the execution and initialization of the
+ * TCP server
+ * 
+ * @author Felipe Barbalho
+ *
+ */
 public class Server {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
 	public static int PORT_SERVER = 9999;

@@ -21,6 +21,12 @@ import org.apache.mina.api.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Agent responsible for answering messages received by the TCP server
+ * 
+ * @author Felipe Barbalho
+ *
+ */
 public class ServerHandler implements IoHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ServerHandler.class);
@@ -41,30 +47,30 @@ public class ServerHandler implements IoHandler {
 	public byte[] processDataFrame(FrameMessage frameMessage) throws ProtocolException, DaoException {
 		switch (frameMessage.frame) {
 
-			case Protocol.TEXT_FRAME:
-				final String text = new String(frameMessage.data);
-				final TextMessage textMessage = new TextMessage(text);
-				LogFile.log("server receive TEXT FRAME: [ " + frameMessage.toString() + " ] = "+text.toString());
-				System.out.println("DATA: " + textMessage.toString());
-				TextMessageDao.save(textMessage);
-				return Protocol.ACK;
+		case Protocol.TEXT_FRAME:
+			final String text = new String(frameMessage.data);
+			final TextMessage textMessage = new TextMessage(text);
+			LogFile.log("server receive TEXT FRAME: [ " + frameMessage.toString() + " ] = " + text.toString());
+			System.out.println("DATA: " + textMessage.toString());
+			TextMessageDao.save(textMessage);
+			return Protocol.ACK;
 
-			case Protocol.USER_FRAME:
-				final User user = new User(frameMessage.data);
-				LogFile.log("server receive USER FRAME: [ " + frameMessage.toString() + " ] = "+user.toString());
-				System.out.println("DATA: " + user.toString());
-				UserDao.save(user);
-				return Protocol.ACK;
+		case Protocol.USER_FRAME:
+			final User user = new User(frameMessage.data);
+			LogFile.log("server receive USER FRAME: [ " + frameMessage.toString() + " ] = " + user.toString());
+			System.out.println("DATA: " + user.toString());
+			UserDao.save(user);
+			return Protocol.ACK;
 
-			case Protocol.TIME_FRAME:
-				final String fuse = new String(frameMessage.data);
-				LogFile.log("server receive TIME FRAME: [ " + frameMessage.toString() + " ] = "+fuse.toString());
-				System.out.println("DATA: " + fuse);
-				return getDateTimeFrame(fuse);
+		case Protocol.TIME_FRAME:
+			final String fuse = new String(frameMessage.data);
+			LogFile.log("server receive TIME FRAME: [ " + frameMessage.toString() + " ] = " + fuse.toString());
+			System.out.println("DATA: " + fuse);
+			return getDateTimeFrame(fuse);
 
-			default:
-				LOG.warn("FRAME INVÁLIDO");
-				throw new ProtocolException("Frame inválido");
+		default:
+			LOG.warn("FRAME INVÁLIDO");
+			throw new ProtocolException("Frame inválido");
 		}
 	}
 
@@ -89,14 +95,14 @@ public class ServerHandler implements IoHandler {
 				FrameMessage frameMessage = new FrameMessage(byteBuffer);
 
 				frameMessage.validate();
-				
-				final byte [] response = processDataFrame(frameMessage);
+
+				final byte[] response = processDataFrame(frameMessage);
 				final ByteBuffer encode = ByteBuffer.wrap(response);
 				session.write(encode);
 
 				FrameMessage frameMessageResponse = new FrameMessage(response);
 				LogFile.log("server send: [ " + frameMessageResponse.toString() + " ]");
-				
+
 			} catch (final Exception exception) {
 				LOG.error("Erro ao tentar processar mensagem do cliente", exception);
 			}

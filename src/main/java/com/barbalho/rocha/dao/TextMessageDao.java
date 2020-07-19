@@ -8,9 +8,15 @@ import com.barbalho.rocha.models.TextMessage;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+/**
+ * Message data access layer
+ * 
+ * @author Felipe Barbalho
+ *
+ */
 public class TextMessageDao {
 
-    public static void save(final TextMessage object) throws DaoException {
+	public static void save(final TextMessage object) throws DaoException {
 		Transaction transaction = null;
 		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
@@ -20,17 +26,17 @@ public class TextMessageDao {
 			if (transaction != null) {
 				transaction.rollback();
 			}
-			throw new DaoException("Erro ao tentar salvar na base de dado", exception);
+			throw new DaoException("Error when trying to save to the database", exception);
 		}
-    }
-    
-    public static List<TextMessage> findAll() throws DaoException{
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+	}
+
+	public static List<TextMessage> findAll() throws DaoException {
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 			List<TextMessage> textMessages = session.createQuery("from TextMessage", TextMessage.class).list();
-            return textMessages;
+			return textMessages;
 		} catch (Exception exception) {
-			throw new DaoException("Erro ao colsultar base de dado", exception);
+			throw new DaoException("Error querying database", exception);
 		}
-    }
-    
+	}
+
 }
